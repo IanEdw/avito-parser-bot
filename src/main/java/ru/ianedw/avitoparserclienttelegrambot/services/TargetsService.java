@@ -44,12 +44,13 @@ public class TargetsService {
         return query.getResultList().stream().findAny().orElse(null);
     }
 
-    public List<Integer> getAllTargetsIds() {
-        return getAllTargets().stream().mapToInt(Target::getId).boxed().toList();
-    }
-
     @Transactional
     public void save(Target target) {
         targetsRepository.save(target);
+    }
+
+    @Transactional
+    public void delete(int id) {
+        targetsRepository.deleteById(id);
     }
 }

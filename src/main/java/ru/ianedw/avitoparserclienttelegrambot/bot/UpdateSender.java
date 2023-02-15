@@ -9,22 +9,26 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.ianedw.avitoparserclienttelegrambot.client.ApiClient;
 import ru.ianedw.avitoparserclienttelegrambot.models.*;
 import ru.ianedw.avitoparserclienttelegrambot.services.PeopleService;
+import ru.ianedw.avitoparserclienttelegrambot.services.TargetsService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class UpdateSender {
     Logger log = LoggerFactory.getLogger(UpdateSender.class);
     private final ApiClient apiClient;
     private final PeopleService peopleService;
+    private final TargetsService targetsService;
     private final ClientBot clientBot;
     private Map<Integer, Map<String, Post>> availablePosts;
     private Map<Integer, List<Person>> targetIdsWithPeople;
 
     @Autowired
-    public UpdateSender(ApiClient apiClient, PeopleService peopleService, ClientBot clientBot) {
+    public UpdateSender(ApiClient apiClient, PeopleService peopleService, TargetsService targetsService, ClientBot clientBot) {
         this.apiClient = apiClient;
         this.peopleService = peopleService;
+        this.targetsService = targetsService;
         this.clientBot = clientBot;
         availablePosts = new HashMap<>();
         loadAvailablePosts();
@@ -92,6 +96,14 @@ public class UpdateSender {
     }
 
     private void updateTargetMapPeople() {
-        targetIdsWithPeople = peopleService.getTargetMapPeople();
+        Map<Integer, List<Person>> map = peopleService.getTargetMapPeople();
+
+        List<Integer> targetIdsToRemove = map.keySet().stream()
+                .filter(integer -> map.get(integer).size() == 0)
+                .collect(Collectors.toList());
+        targetIdsToRemove.forEach(map::remove);
+        targetIdsToRemove.forEach(targetsService::delete);
+        apiClient.removeTargetsFromServer(targetIdsToRemove);
+        targetIdsWithPeople = map;
     }
 }

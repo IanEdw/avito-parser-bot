@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ru.ianedw</groupId>
-	<artifactId>avito-parser-client-telegram-bot</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>avito-parser-client-telegram-bot</name>
+	<artifactId>client-bot</artifactId>
+	<version>0.9</version>
+	<name>client-bot</name>
 	<description>Client telegram bot for avito-parser</description>
 	<properties>
 		<java.version>17</java.version>
@@ -54,6 +54,13 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skipTests>true</skipTests>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

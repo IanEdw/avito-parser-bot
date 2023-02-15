@@ -23,6 +23,7 @@ public class Config {
         this.environment = environment;
     }
 
+
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
@@ -44,5 +45,9 @@ public class Config {
 
     public String getToken() {
         return environment.getProperty("bot.token");
+    }
+
+    public String getParserUrl() {
+        return environment.getProperty("parser.url");
     }
 }

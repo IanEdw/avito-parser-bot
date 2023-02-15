@@ -1,33 +1,46 @@
-package ru.ianedw.avitoparserclienttelegrambot.handlers;
+package ru.ianedw.avitoparserclienttelegrambot.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ru.ianedw.avitoparserclienttelegrambot.client.ApiClient;
 import ru.ianedw.avitoparserclienttelegrambot.models.Person;
 import ru.ianedw.avitoparserclienttelegrambot.models.Rule;
 import ru.ianedw.avitoparserclienttelegrambot.models.Target;
 import ru.ianedw.avitoparserclienttelegrambot.models.TargetDTO;
-import ru.ianedw.avitoparserclienttelegrambot.services.PeopleService;
-import ru.ianedw.avitoparserclienttelegrambot.services.RulesService;
-import ru.ianedw.avitoparserclienttelegrambot.services.TargetsService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Component
-public class TargetHandler {
-    private final PeopleService peopleService;
+@Service
+public class BotService {
     private final TargetsService targetsService;
+    private final PeopleService peopleService;
     private final RulesService rulesService;
     private final ApiClient apiClient;
 
-    @Autowired
-    public TargetHandler(PeopleService peopleService, TargetsService targetsService, RulesService rulesService, ApiClient apiClient) {
-        this.peopleService = peopleService;
+    public BotService(TargetsService targetsService, PeopleService peopleService, RulesService rulesService, ApiClient apiClient) {
         this.targetsService = targetsService;
+        this.peopleService = peopleService;
         this.rulesService = rulesService;
         this.apiClient = apiClient;
+    }
+
+
+    public String start(Person person, long chatId, String name) {
+        if (person == null) {
+            person = new Person();
+            person.setChatId(chatId);
+            person.setName(name);
+        }
+        person.setLastCommand("/menu");
+        peopleService.save(person);
+        return "Добро пожаловать";
+    }
+
+    public String menu(Person person) {
+        person.setLastCommand("/menu");
+        peopleService.save(person);
+        return "Вы в главном меню";
     }
 
     public String beginAddTarget(Person person) {
@@ -37,9 +50,14 @@ public class TargetHandler {
     }
 
     public String addLink(Person person, String receivedMessage) {
-        if (receivedMessage.contains("https://avito.ru")) {
-            return "Пока бот поддерживает только сайт авито.\nВставте ссылку с авито.";
+        if (!receivedMessage.contains("https://www.avito.ru")) {
+            return "Бот поддерживает только сайт авито.\nВставте ссылку с авито.";
         }
+
+        if (!receivedMessage.contains("s=104")) {
+            return "Необходимо задать сортировку по дате\nВставьте ссылку с сортировкой по дате";
+        }
+
         Target target = targetsService.getTargetByLink(receivedMessage);
         if (target == null) {
             TargetDTO dto = new TargetDTO();
@@ -81,11 +99,6 @@ public class TargetHandler {
         return "Вы в главном меню.";
     }
 
-    private String getTargetNameFromLinkParams(String link) {
-        String searchParam = Arrays.stream(link.split("&")).filter(s -> s.contains("q=")).findAny().orElse(null);
-        return searchParam.split("=")[1].replaceAll("\\+", " ");
-    }
-
     public String myTargets(Person person) {
         List<Target> targets = person.getTargets();
         StringBuilder sb = new StringBuilder();
@@ -120,5 +133,14 @@ public class TargetHandler {
         person.setLastCommand("/menu");
         peopleService.save(person);
         return "Цель удалена\nВы в главном меню";
+    }
+
+    public Person getOneByChatId(long chatId) {
+        return peopleService.getOneByChatId(chatId);
+    }
+
+    private String getTargetNameFromLinkParams(String link) {
+        String searchParam = Arrays.stream(link.split("&")).filter(s -> s.contains("q=")).findAny().orElse(null);
+        return searchParam.split("=")[1].replaceAll("\\+", " ");
     }
 }
