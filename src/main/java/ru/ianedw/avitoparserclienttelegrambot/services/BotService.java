@@ -1,11 +1,9 @@
 package ru.ianedw.avitoparserclienttelegrambot.services;
 
 import org.springframework.stereotype.Service;
-import ru.ianedw.avitoparserclienttelegrambot.client.ApiClient;
 import ru.ianedw.avitoparserclienttelegrambot.models.Person;
 import ru.ianedw.avitoparserclienttelegrambot.models.Rule;
 import ru.ianedw.avitoparserclienttelegrambot.models.Target;
-import ru.ianedw.avitoparserclienttelegrambot.models.TargetDTO;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,13 +14,11 @@ public class BotService {
     private final TargetsService targetsService;
     private final PeopleService peopleService;
     private final RulesService rulesService;
-    private final ApiClient apiClient;
 
-    public BotService(TargetsService targetsService, PeopleService peopleService, RulesService rulesService, ApiClient apiClient) {
+    public BotService(TargetsService targetsService, PeopleService peopleService, RulesService rulesService) {
         this.targetsService = targetsService;
         this.peopleService = peopleService;
         this.rulesService = rulesService;
-        this.apiClient = apiClient;
     }
 
 
@@ -54,19 +50,18 @@ public class BotService {
             return "Бот поддерживает только сайт авито.\nВставте ссылку с авито.";
         }
 
+        if (!receivedMessage.contains("q=")) {
+            return "Необходимо вставить ссылку с поисковым запросом";
+        }
+
         if (!receivedMessage.contains("s=104")) {
             return "Необходимо задать сортировку по дате\nВставьте ссылку с сортировкой по дате";
         }
 
         Target target = targetsService.getTargetByLink(receivedMessage);
         if (target == null) {
-            TargetDTO dto = new TargetDTO();
-            dto.setLink(receivedMessage);
-            dto = apiClient.sendTargetToParseServer(dto);
-
             target = new Target();
-            target.setId(dto.getId());
-            target.setLink(dto.getLink());
+            target.setLink(receivedMessage);
             target.setName(getTargetNameFromLinkParams(receivedMessage));
 
             List<Person> people = new ArrayList<>();

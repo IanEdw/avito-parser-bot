@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ianedw.avitoparserclienttelegrambot.models.Person;
-import ru.ianedw.avitoparserclienttelegrambot.models.Target;
 import ru.ianedw.avitoparserclienttelegrambot.repositories.PeopleRepository;
 
 import java.util.*;
@@ -52,24 +51,5 @@ public class PeopleService {
     @Transactional
     public void save(Person person) {
         repository.save(person);
-    }
-
-    public Map<Integer, List<Person>> getTargetMapPeople() {
-        List<Person> people = getAllPeople();
-        Map<Integer, List<Person>> result = new HashMap<>();
-
-        for (Person person : people) {
-            for (Target target : person.getTargets()) {
-                List<Person> targetPeople;
-                if (result.containsKey(target.getId())) {
-                    targetPeople = result.get(target.getId());
-                } else {
-                    targetPeople = new ArrayList<>();
-                }
-                targetPeople.add(person);
-                result.put(target.getId(), targetPeople);
-            }
-        }
-        return result;
     }
 }
