@@ -4,26 +4,45 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import ru.ianedw.avitoparserclienttelegrambot.bot.ClientBot;
+import ru.ianedw.avitoparserclienttelegrambot.models.Person;
 import ru.ianedw.avitoparserclienttelegrambot.models.Post;
 import ru.ianedw.avitoparserclienttelegrambot.models.Target;
+import ru.ianedw.avitoparserclienttelegrambot.services.PeopleService;
+import ru.ianedw.avitoparserclienttelegrambot.services.TargetsService;
 import ru.ianedw.avitoparserclienttelegrambot.util.NotTargetPost;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class Parser {
     Logger log = LoggerFactory.getLogger(Parser.class);
-    private final String XPATH_QUERY = "//div[@data-marker='catalog-serp']//div[@data-marker='item']";
+    private final ClientBot clientBot;
+    private final PeopleService peopleService;
+    private final TargetsService targetsService;
     private Map<Integer, Map<String, Post>> availablePosts;
+    private Map<Integer, List<Person>> targetIdsWithPeople;
+    private List<Target> targets;
+    private final String XPATH_QUERY = "//div[@data-marker='catalog-serp']//div[@data-marker='item']";
 
 
-    public Parser() {
+    @Autowired
+    public Parser(ClientBot clientBot, PeopleService peopleService, TargetsService targetsService) {
+        this.clientBot = clientBot;
+        this.peopleService = peopleService;
+        this.targetsService = targetsService;
+        reloadAvailablePosts();
     }
 
-
-    public Map<Integer, Map<String, Post>> getAvailablePosts(List<Target> targets) {
+    @Scheduled(initialDelay = 15000, fixedDelay = 15000)
+    public void updateAvailablePosts() {
+        updateTargetsMapPeople();
         for (Target target : targets) {
             if (availablePosts.containsKey(target.getId())) {
                 updatePosts(target);
@@ -31,7 +50,12 @@ public class Parser {
                 loadAvailablePosts(target);
             }
         }
-        return availablePosts;
+    }
+
+    @Scheduled(timeUnit = TimeUnit.HOURS, fixedDelay = 3)
+    private void reloadAvailablePosts() {
+        updateTargetsMapPeople();
+        loadAvailablePosts(targets);
     }
 
     private void updatePosts(Target target) {
@@ -65,20 +89,37 @@ public class Parser {
             return;
         }
 
-        Post post = new Post();
+        Post newPost = new Post();
 
-        post.setLink(link);
-        post.setName(findPostName(body, expression));
-        post.setPrice(findPostPrice(body, expression));
+        newPost.setLink(link);
+        newPost.setName(findPostName(body, expression));
+        newPost.setPrice(findPostPrice(body, expression));
 
-        targetPosts.put(link, post);
+        targetPosts.put(link, newPost);
+        sendNewPostToPeople(targetId, newPost);
+    }
+
+    private void sendNewPostToPeople(int targetId, Post newPost) {
+        try {
+            String message = "Новое объявление для цели c id -  " + targetId + "\n";
+            int price = newPost.getPrice();
+            List<Person> people = targetIdsWithPeople.get(targetId);
+            if (people == null) {
+                return;
+            }
+            for (Person person : people) {
+                if (price <= person.getRuleMaxPrice(targetId)) {
+                    clientBot.sendMessage(person.getChatId(), message + newPost);
+                }
+            }
+        } catch (TelegramApiException ignored) {
+        }
     }
 
 
-    public Map<Integer, Map<String, Post>> loadAvailablePosts(List<Target> targets) {
+    public void loadAvailablePosts(List<Target> targets) {
         availablePosts = new HashMap<>();
         targets.forEach(this::loadAvailablePosts);
-        return availablePosts;
     }
 
     private void loadAvailablePosts(Target target) {
@@ -147,5 +188,34 @@ public class Parser {
 
     private int findPostPrice(Element body, String parentExpression) {
         return Integer.parseInt(body.selectXpath(parentExpression + "//meta[@itemprop='price']").attr("content"));
+    }
+
+    private void updateTargetsMapPeople() {
+        List<Person> people = peopleService.getAllPeople();
+        Map<Integer, List<Person>> map = new HashMap<>();
+
+        for (Person person : people) {
+            for (Target target : person.getTargets()) {
+                List<Person> targetPeople;
+                if (map.containsKey(target.getId())) {
+                    targetPeople = map.get(target.getId());
+                } else {
+                    targetPeople = new ArrayList<>();
+                }
+                targetPeople.add(person);
+                map.put(target.getId(), targetPeople);
+            }
+        }
+
+        List<Integer> targetIdsToRemove = map.keySet().stream()
+                .filter(integer -> map.get(integer).size() == 0).toList();
+        targetIdsToRemove.forEach(map::remove);
+        targetIdsToRemove.forEach(targetsService::delete);
+        targetIdsWithPeople = map;
+        updateTargets();
+    }
+
+    private void updateTargets() {
+        targets = targetsService.getAllTargets();
     }
 }
