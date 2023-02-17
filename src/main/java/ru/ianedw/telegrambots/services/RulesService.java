@@ -1,10 +1,10 @@
-package ru.ianedw.avitoparserclienttelegrambot.services;
+package ru.ianedw.telegrambots.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.ianedw.avitoparserclienttelegrambot.models.Rule;
-import ru.ianedw.avitoparserclienttelegrambot.repositories.RulesRepository;
+import ru.ianedw.telegrambots.models.Rule;
+import ru.ianedw.telegrambots.repositories.RulesRepository;
 
 import java.util.List;
 

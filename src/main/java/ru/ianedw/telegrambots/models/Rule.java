@@ -1,4 +1,4 @@
-package ru.ianedw.avitoparserclienttelegrambot.models;
+package ru.ianedw.telegrambots.models;
 
 import jakarta.persistence.*;
 

@@ -1,9 +1,9 @@
-package ru.ianedw.avitoparserclienttelegrambot.services;
+package ru.ianedw.telegrambots.services;
 
 import org.springframework.stereotype.Service;
-import ru.ianedw.avitoparserclienttelegrambot.models.Person;
-import ru.ianedw.avitoparserclienttelegrambot.models.Rule;
-import ru.ianedw.avitoparserclienttelegrambot.models.Target;
+import ru.ianedw.telegrambots.models.Person;
+import ru.ianedw.telegrambots.models.Rule;
+import ru.ianedw.telegrambots.models.Target;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,9 +68,9 @@ public class BotService {
             people.add(person);
 
             target.setPeople(people);
-            person.setLastCommand("/addRule:" + target.getId());
             person.getTargets().add(target);
-            targetsService.save(target);
+            target = targetsService.save(target);
+            person.setLastCommand("/addRule:" + target.getId());
             peopleService.save(person);
         } else {
             target.getPeople().add(person);
@@ -127,6 +127,10 @@ public class BotService {
         targets.remove(targetToRemove);
         person.setLastCommand("/menu");
         peopleService.save(person);
+        targetToRemove = targetsService.getTargetById(targetId);
+        if (targetToRemove.getPeople().size() == 0) {
+            targetsService.delete(targetId);
+        }
         return "Цель удалена\nВы в главном меню";
     }
 

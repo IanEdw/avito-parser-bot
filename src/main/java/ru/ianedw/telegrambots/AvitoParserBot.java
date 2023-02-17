@@ -1,4 +1,4 @@
-package ru.ianedw.avitoparserclienttelegrambot;
+package ru.ianedw.telegrambots;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,10 +6,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-public class AvitoParserClientTelegramBotApplication {
+public class AvitoParserBot {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AvitoParserClientTelegramBotApplication.class, args);
+		SpringApplication.run(AvitoParserBot.class, args);
 	}
 
 }

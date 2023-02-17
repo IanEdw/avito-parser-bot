@@ -1,4 +1,4 @@
-package ru.ianedw.avitoparserclienttelegrambot.config;
+package ru.ianedw.telegrambots.config;
 
 
 import org.springframework.beans.factory.annotation.Autowired;

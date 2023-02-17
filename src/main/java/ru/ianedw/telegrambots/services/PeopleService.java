@@ -1,4 +1,4 @@
-package ru.ianedw.avitoparserclienttelegrambot.services;
+package ru.ianedw.telegrambots.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -6,8 +6,8 @@ import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.ianedw.avitoparserclienttelegrambot.models.Person;
-import ru.ianedw.avitoparserclienttelegrambot.repositories.PeopleRepository;
+import ru.ianedw.telegrambots.models.Person;
+import ru.ianedw.telegrambots.repositories.PeopleRepository;
 
 import java.util.*;
 

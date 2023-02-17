@@ -1,4 +1,4 @@
-package ru.ianedw.avitoparserclienttelegrambot.services;
+package ru.ianedw.telegrambots.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -7,8 +7,8 @@ import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.ianedw.avitoparserclienttelegrambot.models.Target;
-import ru.ianedw.avitoparserclienttelegrambot.repositories.TargetsRepository;
+import ru.ianedw.telegrambots.models.Target;
+import ru.ianedw.telegrambots.repositories.TargetsRepository;
 
 import java.util.List;
 
@@ -45,8 +45,8 @@ public class TargetsService {
     }
 
     @Transactional
-    public void save(Target target) {
-        targetsRepository.save(target);
+    public Target save(Target target) {
+        return targetsRepository.save(target);
     }
 
     @Transactional

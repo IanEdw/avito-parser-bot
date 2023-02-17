@@ -1,4 +1,4 @@
-package ru.ianedw.avitoparserclienttelegrambot.parser;
+package ru.ianedw.telegrambots.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
@@ -8,13 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.ianedw.avitoparserclienttelegrambot.bot.ClientBot;
-import ru.ianedw.avitoparserclienttelegrambot.models.Person;
-import ru.ianedw.avitoparserclienttelegrambot.models.Post;
-import ru.ianedw.avitoparserclienttelegrambot.models.Target;
-import ru.ianedw.avitoparserclienttelegrambot.services.PeopleService;
-import ru.ianedw.avitoparserclienttelegrambot.services.TargetsService;
-import ru.ianedw.avitoparserclienttelegrambot.util.NotTargetPost;
+import ru.ianedw.telegrambots.bot.ClientBot;
+import ru.ianedw.telegrambots.models.Person;
+import ru.ianedw.telegrambots.models.Post;
+import ru.ianedw.telegrambots.models.Target;
+import ru.ianedw.telegrambots.services.PeopleService;
+import ru.ianedw.telegrambots.services.TargetsService;
+import ru.ianedw.telegrambots.util.NotTargetPost;
 
 import java.io.IOException;
 import java.util.*;
@@ -40,19 +40,23 @@ public class Parser {
         reloadAvailablePosts();
     }
 
-    @Scheduled(initialDelay = 15000, fixedDelay = 15000)
+    @Scheduled(timeUnit = TimeUnit.SECONDS, initialDelay = 30, fixedDelay = 30)
     public void updateAvailablePosts() {
+        log.info("Start updateAvailablePosts()");
         updateTargetsMapPeople();
+        Collections.shuffle(targets);
         for (Target target : targets) {
+            log.info("updateAvailablePosts(" + target.getId() + ")");
             if (availablePosts.containsKey(target.getId())) {
                 updatePosts(target);
             } else {
                 loadAvailablePosts(target);
             }
         }
+        log.info("--------------------------------------------\n\n");
     }
 
-    @Scheduled(timeUnit = TimeUnit.HOURS, fixedDelay = 3)
+    @Scheduled(cron = "0 0 * * ?")
     private void reloadAvailablePosts() {
         updateTargetsMapPeople();
         loadAvailablePosts(targets);
@@ -69,9 +73,8 @@ public class Parser {
                     break;
                 }
             }
-            log.info("Размер availablePosts для Target " + target.getId() + " = " + availablePosts.get(target.getId()).size());
         } catch (IOException e) {
-            log.warn("JSOUP НЕ СМОГ ПОЛУЧИТЬ ДАННЫЕ");
+            log.warn("-----------JSOUP COULDN'T CONNECT------------");
         }
     }
 
@@ -88,7 +91,7 @@ public class Parser {
         if (targetPosts.containsKey(link)) {
             return;
         }
-
+        log.info("Detected new post");
         Post newPost = new Post();
 
         newPost.setLink(link);
@@ -207,10 +210,6 @@ public class Parser {
             }
         }
 
-        List<Integer> targetIdsToRemove = map.keySet().stream()
-                .filter(integer -> map.get(integer).size() == 0).toList();
-        targetIdsToRemove.forEach(map::remove);
-        targetIdsToRemove.forEach(targetsService::delete);
         targetIdsWithPeople = map;
         updateTargets();
     }
