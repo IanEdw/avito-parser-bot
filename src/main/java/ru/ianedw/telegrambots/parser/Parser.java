@@ -56,7 +56,7 @@ public class Parser {
         log.info("--------------------------------------------\n\n");
     }
 
-    @Scheduled(cron = "0 0 * * ?")
+    @Scheduled(cron = "0 0 0 * * *")
     private void reloadAvailablePosts() {
         updateTargetsMapPeople();
         loadAvailablePosts(targets);
@@ -140,9 +140,9 @@ public class Parser {
             }
 
             availablePosts.put(target.getId(), posts);
-            log.info("Загружено " + posts.size() + " объявлений");
+            log.info("Loaded " + posts.size() + " posts");
         } catch (IOException e) {
-            log.warn("JSOUP НЕ СМОГ ПОЛУЧИТЬ ДАННЫЕ");
+            log.warn("-----------JSOUP COULDN'T CONNECT------------");
         }
     }
 
